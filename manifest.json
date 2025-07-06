@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Google カレンダーグループ",
+  "version": "1.0.0",
+  "description": "Google Calendarでカレンダーグループを素早く切り替えできる拡張機能",
+  "permissions": ["contextMenus", "storage", "activeTab"],
+  "host_permissions": ["https://calendar.google.com/*"],
+  "background": {
+    "service_worker": "dist/background-standalone.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://calendar.google.com/*"],
+      "js": ["dist/content-standalone.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Google カレンダーグループ"
+  },
+  "icons": {
+    "16": "icons/icon.png"
+  }
+}

@@ -28,21 +28,12 @@ const BG_MENU_IDS = {
   PREFIX: "calendar-group-",
   CREATE: "create-group",
   SEPARATOR: "separator",
+  SETTINGS: "open-settings",
 } as const;
 
 const BG_DEFAULT_SETTINGS: Settings = {
   disableOthers: true,
 };
-
-// ===== ユーティリティ関数 =====
-
-/**
- * ユニークIDを生成します
- * @returns {string} 生成されたID
- */
-function bgGenerateId(): string {
-  return crypto.randomUUID();
-}
 
 // ===== ストレージ関数 =====
 
@@ -156,7 +147,33 @@ async function bgUpdateContextMenus(): Promise<void> {
       contexts: ["page"],
       documentUrlPatterns: ["https://calendar.google.com/*"],
     });
+
+    // 「設定」メニューを追加
+    chrome.contextMenus.create({
+      id: BG_MENU_IDS.SETTINGS,
+      title: "設定",
+      contexts: ["page"],
+      documentUrlPatterns: ["https://calendar.google.com/*"],
+    });
   });
+}
+
+// ===== ページ操作 =====
+
+/**
+ * 設定ページを新しいタブで開きます
+ * @returns {Promise<void>}
+ */
+async function bgOpenSettingsPage(): Promise<void> {
+  try {
+    const settingsUrl = chrome.runtime.getURL("settings.html");
+    await chrome.tabs.create({
+      url: settingsUrl,
+    });
+    console.log("Settings page opened successfully");
+  } catch (error) {
+    console.error("Failed to open settings page:", error);
+  }
 }
 
 // ===== メッセージ送信 =====
@@ -235,6 +252,9 @@ async function bgHandleContextMenuClick(
     if (menuItemId === BG_MENU_IDS.CREATE) {
       // グループ作成メニューがクリックされた場合
       await bgSendCreateGroupMessage(tab.id);
+    } else if (menuItemId === BG_MENU_IDS.SETTINGS) {
+      // 設定メニューがクリックされた場合
+      await bgOpenSettingsPage();
     } else if (menuItemId.startsWith(BG_MENU_IDS.PREFIX)) {
       // 既存グループメニューがクリックされた場合
       const groupId = menuItemId.replace(BG_MENU_IDS.PREFIX, "");

@@ -26,12 +26,12 @@ interface Settings {
 // ===== 定数 =====
 
 const CT_STORAGE_KEYS = {
-  GROUPS: 'calendarGroups',
-  SETTINGS: 'settings'
+  GROUPS: "calendarGroups",
+  SETTINGS: "settings",
 } as const;
 
 const CT_DEFAULT_SETTINGS: Settings = {
-  disableOthers: true
+  disableOthers: true,
 };
 
 // カレンダーセクションを探すためのセレクタ（優先度順）
@@ -42,7 +42,7 @@ const CT_CALENDAR_SELECTORS = [
   '[aria-label*="calendar"]',
   '[data-testid*="calendar"]',
   '[role="tree"]',
-  '[role="group"]'
+  '[role="group"]',
 ] as const;
 
 const CT_CHECKBOX_SELECTOR = 'input[type="checkbox"]';
@@ -55,7 +55,7 @@ const CT_CHECKBOX_SELECTOR = 'input[type="checkbox"]';
  * @returns {Promise<void>}
  */
 function ctSleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -63,7 +63,7 @@ function ctSleep(ms: number): Promise<void> {
  * @returns {string} 生成されたID
  */
 function ctGenerateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return crypto.randomUUID();
 }
 
 // ===== ストレージ関数 =====
@@ -76,10 +76,10 @@ function ctGenerateId(): string {
 async function ctSaveGroups(groups: CalendarGroup[]): Promise<void> {
   try {
     await chrome.storage.local.set({
-      [CT_STORAGE_KEYS.GROUPS]: groups
+      [CT_STORAGE_KEYS.GROUPS]: groups,
     });
   } catch (error) {
-    console.error('Failed to save groups:', error);
+    console.error("Failed to save groups:", error);
     throw error;
   }
 }
@@ -93,7 +93,7 @@ async function ctLoadGroups(): Promise<CalendarGroup[]> {
     const result = await chrome.storage.local.get(CT_STORAGE_KEYS.GROUPS);
     return result[CT_STORAGE_KEYS.GROUPS] || [];
   } catch (error) {
-    console.error('Failed to load groups:', error);
+    console.error("Failed to load groups:", error);
     return [];
   }
 }
@@ -107,7 +107,7 @@ async function ctLoadSettings(): Promise<Settings> {
     const result = await chrome.storage.local.get(CT_STORAGE_KEYS.SETTINGS);
     return { ...CT_DEFAULT_SETTINGS, ...result[CT_STORAGE_KEYS.SETTINGS] };
   } catch (error) {
-    console.error('Failed to load settings:', error);
+    console.error("Failed to load settings:", error);
     return CT_DEFAULT_SETTINGS;
   }
 }
@@ -140,7 +140,8 @@ async function ctFindCalendarSection(): Promise<HTMLElement | null> {
       const section = document.querySelector(selector) as HTMLElement;
       if (section) {
         // セクション内にチェックボックスがあるかチェック
-        const hasCheckboxes = section.querySelectorAll(CT_CHECKBOX_SELECTOR).length > 0;
+        const hasCheckboxes =
+          section.querySelectorAll(CT_CHECKBOX_SELECTOR).length > 0;
         if (hasCheckboxes) {
           console.log(`カレンダーセクションを発見: ${selector}`);
           return section;
@@ -153,20 +154,22 @@ async function ctFindCalendarSection(): Promise<HTMLElement | null> {
     if (allCheckboxes.length > 0) {
       // チェックボックスの親要素を探す
       for (const checkbox of Array.from(allCheckboxes)) {
-        const container = checkbox.closest('[role="tree"], [role="group"], [aria-label*="calendar"], [aria-label*="カレンダー"]');
+        const container = checkbox.closest(
+          '[role="tree"], [role="group"], [aria-label*="calendar"], [aria-label*="カレンダー"]'
+        );
         if (container) {
-          console.log('フォールバックでカレンダーセクションを発見');
+          console.log("フォールバックでカレンダーセクションを発見");
           return container as HTMLElement;
         }
       }
-      
+
       // 最後の手段：すべてのチェックボックスを含む共通の親要素を探す
       const firstCheckbox = allCheckboxes[0] as HTMLElement;
       let parent = firstCheckbox.parentElement;
       while (parent && parent !== document.body) {
         const childCheckboxes = parent.querySelectorAll(CT_CHECKBOX_SELECTOR);
         if (childCheckboxes.length >= allCheckboxes.length * 0.5) {
-          console.log('共通親要素をカレンダーセクションとして使用');
+          console.log("共通親要素をカレンダーセクションとして使用");
           return parent;
         }
         parent = parent.parentElement;
@@ -176,7 +179,10 @@ async function ctFindCalendarSection(): Promise<HTMLElement | null> {
     await ctSleep(retryDelay);
   }
 
-  console.warn('カレンダーセクションが見つかりませんでした。利用可能なチェックボックス:', document.querySelectorAll(CT_CHECKBOX_SELECTOR).length);
+  console.warn(
+    "カレンダーセクションが見つかりませんでした。利用可能なチェックボックス:",
+    document.querySelectorAll(CT_CHECKBOX_SELECTOR).length
+  );
   return null;
 }
 
@@ -188,7 +194,7 @@ async function ctFindCalendarSection(): Promise<HTMLElement | null> {
  */
 function ctGetCalendarLabel(checkbox: HTMLInputElement): string | null {
   // 1. aria-labelledby属性から取得
-  const labelledBy = checkbox.getAttribute('aria-labelledby');
+  const labelledBy = checkbox.getAttribute("aria-labelledby");
   if (labelledBy) {
     const labelElement = document.getElementById(labelledBy);
     if (labelElement) {
@@ -198,19 +204,19 @@ function ctGetCalendarLabel(checkbox: HTMLInputElement): string | null {
   }
 
   // 2. 直接のaria-label属性
-  const ariaLabel = checkbox.getAttribute('aria-label');
+  const ariaLabel = checkbox.getAttribute("aria-label");
   if (ariaLabel) return ariaLabel;
 
   // 3. 関連するlabel要素
-  const container = checkbox.closest('div, li, span');
+  const container = checkbox.closest("div, li, span");
   if (container) {
-    const label = container.querySelector('label, span, div');
+    const label = container.querySelector("label, span, div");
     if (label) {
-      const labelAriaLabel = label.getAttribute('aria-label');
+      const labelAriaLabel = label.getAttribute("aria-label");
       if (labelAriaLabel) return labelAriaLabel;
-      
+
       const text = label.textContent?.trim();
-      if (text && text.length > 0 && !text.includes('checkbox')) {
+      if (text && text.length > 0 && !text.includes("checkbox")) {
         return text;
       }
     }
@@ -222,7 +228,7 @@ function ctGetCalendarLabel(checkbox: HTMLInputElement): string | null {
   while (parent && attempts < 3) {
     const text = parent.textContent?.trim();
     if (text && text.length > 0 && text.length < 100) {
-      const withoutCheckbox = text.replace(/checkbox/gi, '').trim();
+      const withoutCheckbox = text.replace(/checkbox/gi, "").trim();
       if (withoutCheckbox.length > 0) {
         return withoutCheckbox;
       }
@@ -232,9 +238,10 @@ function ctGetCalendarLabel(checkbox: HTMLInputElement): string | null {
   }
 
   // 5. data属性から取得
-  const dataName = checkbox.getAttribute('data-name') || 
-                   checkbox.getAttribute('data-calendar-name') ||
-                   checkbox.getAttribute('data-label');
+  const dataName =
+    checkbox.getAttribute("data-name") ||
+    checkbox.getAttribute("data-calendar-name") ||
+    checkbox.getAttribute("data-label");
   if (dataName) return dataName;
 
   return null;
@@ -250,7 +257,9 @@ async function ctGetCalendarCheckboxes(): Promise<CalendarCheckbox[]> {
     return [];
   }
 
-  const checkboxes = Array.from(section.querySelectorAll(CT_CHECKBOX_SELECTOR)) as HTMLInputElement[];
+  const checkboxes = Array.from(
+    section.querySelectorAll(CT_CHECKBOX_SELECTOR)
+  ) as HTMLInputElement[];
   const calendarCheckboxes: CalendarCheckbox[] = [];
 
   for (const checkbox of checkboxes) {
@@ -259,7 +268,7 @@ async function ctGetCalendarCheckboxes(): Promise<CalendarCheckbox[]> {
       calendarCheckboxes.push({
         element: checkbox,
         label: label,
-        checked: checkbox.checked
+        checked: checkbox.checked,
       });
     }
   }
@@ -288,46 +297,61 @@ async function ctWaitForCalendarLoad(): Promise<void> {
   const checkInterval = 1000; // 1秒間隔
   const startTime = Date.now();
 
-  console.log('カレンダーの読み込みを待機しています...');
+  console.log("カレンダーの読み込みを待機しています...");
 
   while (Date.now() - startTime < maxWait) {
     // デバッグ情報を出力
     const allCheckboxes = document.querySelectorAll(CT_CHECKBOX_SELECTOR);
     console.log(`チェックボックス総数: ${allCheckboxes.length}`);
-    
+
     if (allCheckboxes.length > 0) {
-      console.log('見つかったチェックボックス:', Array.from(allCheckboxes).slice(0, 3).map(cb => ({
-        id: (cb as HTMLInputElement).id,
-        name: cb.getAttribute('name'),
-        ariaLabel: cb.getAttribute('aria-label'),
-        parent: cb.parentElement?.tagName
-      })));
+      console.log(
+        "見つかったチェックボックス:",
+        Array.from(allCheckboxes)
+          .slice(0, 3)
+          .map((cb) => ({
+            id: (cb as HTMLInputElement).id,
+            name: cb.getAttribute("name"),
+            ariaLabel: cb.getAttribute("aria-label"),
+            parent: cb.parentElement?.tagName,
+          }))
+      );
     }
 
     const section = await ctFindCalendarSection();
     if (section) {
       const checkboxes = await ctGetCalendarCheckboxes();
       console.log(`カレンダーチェックボックス数: ${checkboxes.length}`);
-      
+
       if (checkboxes.length > 0) {
-        console.log('カレンダーが正常に読み込まれました');
-        console.log('見つかったカレンダー:', checkboxes.slice(0, 3).map(c => c.label));
+        console.log("カレンダーが正常に読み込まれました");
+        console.log(
+          "見つかったカレンダー:",
+          checkboxes.slice(0, 3).map((c) => c.label)
+        );
         return;
       }
     }
 
     const elapsed = Date.now() - startTime;
-    console.log(`カレンダー読み込み待機中... (${Math.floor(elapsed/1000)}秒経過)`);
+    console.log(
+      `カレンダー読み込み待機中... (${Math.floor(elapsed / 1000)}秒経過)`
+    );
     await ctSleep(checkInterval);
   }
 
   // タイムアウト時の詳細情報
-  const finalCheckboxCount = document.querySelectorAll(CT_CHECKBOX_SELECTOR).length;
-  console.error(`カレンダー読み込みタイムアウト - 総チェックボックス数: ${finalCheckboxCount}`);
-  console.error('現在のURL:', window.location.href);
-  console.error('ページタイトル:', document.title);
+  const finalCheckboxCount =
+    document.querySelectorAll(CT_CHECKBOX_SELECTOR).length;
+  console.error(
+    `カレンダー読み込みタイムアウト - 総チェックボックス数: ${finalCheckboxCount}`
+  );
+  console.error("現在のURL:", window.location.href);
+  console.error("ページタイトル:", document.title);
 
-  throw new Error(`カレンダーの読み込みがタイムアウトしました (チェックボックス数: ${finalCheckboxCount})`);
+  throw new Error(
+    `カレンダーの読み込みがタイムアウトしました (チェックボックス数: ${finalCheckboxCount})`
+  );
 }
 
 // ===== カレンダー操作関数 =====
@@ -338,20 +362,23 @@ async function ctWaitForCalendarLoad(): Promise<void> {
  * @param {boolean} [disableOthers=true] - グループ外のカレンダーを無効にするかどうか
  * @returns {Promise<void>}
  */
-async function ctApplyCalendarGroup(group: CalendarGroup, disableOthers: boolean = true): Promise<void> {
+async function ctApplyCalendarGroup(
+  group: CalendarGroup,
+  disableOthers: boolean = true
+): Promise<void> {
   const checkboxes = await ctGetCalendarCheckboxes();
-  
+
   if (checkboxes.length === 0) {
-    console.warn('チェックボックスが見つかりませんでした');
+    console.warn("チェックボックスが見つかりませんでした");
     return;
   }
 
   console.log(`グループ "${group.name}" を適用中...`);
-  console.log('対象カレンダー:', group.calendars);
-  
+  console.log("対象カレンダー:", group.calendars);
+
   for (const checkbox of checkboxes) {
     const shouldBeChecked = group.calendars.includes(checkbox.label);
-    
+
     if (shouldBeChecked && !checkbox.checked) {
       ctToggleCheckbox(checkbox.element, true);
       console.log(`カレンダー "${checkbox.label}" を有効にしました`);
@@ -369,8 +396,8 @@ async function ctApplyCalendarGroup(group: CalendarGroup, disableOthers: boolean
 async function ctGetCurrentlySelectedCalendars(): Promise<string[]> {
   const checkboxes = await ctGetCalendarCheckboxes();
   return checkboxes
-    .filter(checkbox => checkbox.checked)
-    .map(checkbox => checkbox.label);
+    .filter((checkbox) => checkbox.checked)
+    .map((checkbox) => checkbox.label);
 }
 
 // ===== UI関数 =====
@@ -380,11 +407,11 @@ async function ctGetCurrentlySelectedCalendars(): Promise<string[]> {
  * @param {string} message - 表示するメッセージ
  */
 function ctShowNotification(message: string): void {
-  const notification = document.createElement('div');
-  notification.className = 'calendar-group-notification';
+  const notification = document.createElement("div");
+  notification.className = "calendar-group-notification";
   notification.textContent = message;
-  
-  const style = document.createElement('style');
+
+  const style = document.createElement("style");
   style.textContent = `
     .calendar-group-notification {
       position: fixed;
@@ -402,10 +429,10 @@ function ctShowNotification(message: string): void {
       font-family: 'Roboto', sans-serif;
     }
   `;
-  
+
   notification.appendChild(style);
   document.body.appendChild(notification);
-  
+
   // 4秒後に自動削除
   setTimeout(() => {
     if (document.body.contains(notification)) {
@@ -420,10 +447,10 @@ function ctShowNotification(message: string): void {
  * @param {string} message - エラーメッセージ
  */
 function ctShowInputError(input: HTMLInputElement, message: string): void {
-  const errorElement = input.parentElement?.querySelector('.error-message');
+  const errorElement = input.parentElement?.querySelector(".error-message");
   if (errorElement) {
     errorElement.textContent = message;
-    input.style.borderColor = '#d32f2f';
+    input.style.borderColor = "#d32f2f";
   }
 }
 
@@ -434,9 +461,13 @@ function ctShowInputError(input: HTMLInputElement, message: string): void {
 function ctPromptForGroupName(): Promise<string | null> {
   return new Promise((resolve) => {
     const modal = ctCreateGroupNameModal();
-    const input = modal.querySelector('input') as HTMLInputElement;
-    const createButton = modal.querySelector('.create-button') as HTMLButtonElement;
-    const cancelButton = modal.querySelector('.cancel-button') as HTMLButtonElement;
+    const input = modal.querySelector("input") as HTMLInputElement;
+    const createButton = modal.querySelector(
+      ".create-button"
+    ) as HTMLButtonElement;
+    const cancelButton = modal.querySelector(
+      ".cancel-button"
+    ) as HTMLButtonElement;
 
     const handleCreate = () => {
       const name = input.value.trim();
@@ -444,7 +475,7 @@ function ctPromptForGroupName(): Promise<string | null> {
         document.body.removeChild(modal);
         resolve(name);
       } else {
-        ctShowInputError(input, 'グループ名を入力してください');
+        ctShowInputError(input, "グループ名を入力してください");
       }
     };
 
@@ -454,13 +485,13 @@ function ctPromptForGroupName(): Promise<string | null> {
     };
 
     // イベントリスナーを設定
-    createButton.addEventListener('click', handleCreate);
-    cancelButton.addEventListener('click', handleCancel);
-    
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
+    createButton.addEventListener("click", handleCreate);
+    cancelButton.addEventListener("click", handleCancel);
+
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
         handleCreate();
-      } else if (e.key === 'Escape') {
+      } else if (e.key === "Escape") {
         handleCancel();
       }
     });
@@ -475,8 +506,8 @@ function ctPromptForGroupName(): Promise<string | null> {
  * @returns {HTMLElement} 作成されたモーダル要素
  */
 function ctCreateGroupNameModal(): HTMLElement {
-  const modal = document.createElement('div');
-  modal.className = 'calendar-group-modal';
+  const modal = document.createElement("div");
+  modal.className = "calendar-group-modal";
   modal.innerHTML = `
     <div class="modal-overlay">
       <div class="modal-content">
@@ -503,7 +534,7 @@ function ctCreateGroupNameModal(): HTMLElement {
  * @param {HTMLElement} modal - スタイルを追加するモーダル要素
  */
 function ctAddModalStyles(modal: HTMLElement): void {
-  const style = document.createElement('style');
+  const style = document.createElement("style");
   style.textContent = `
     .calendar-group-modal {
       position: fixed;
@@ -622,9 +653,11 @@ function ctAddModalStyles(modal: HTMLElement): void {
 async function ctCreateCalendarGroup(): Promise<void> {
   try {
     const selectedCalendars = await ctGetCurrentlySelectedCalendars();
-    
+
     if (selectedCalendars.length === 0) {
-      ctShowNotification('カレンダーが選択されていません。グループを作成するには、少なくとも1つのカレンダーを選択してください。');
+      ctShowNotification(
+        "カレンダーが選択されていません。グループを作成するには、少なくとも1つのカレンダーを選択してください。"
+      );
       return;
     }
 
@@ -635,10 +668,12 @@ async function ctCreateCalendarGroup(): Promise<void> {
 
     // 既存グループ名との重複チェック
     const existingGroups = await ctLoadGroups();
-    const nameExists = existingGroups.some(group => group.name === groupName);
-    
+    const nameExists = existingGroups.some((group) => group.name === groupName);
+
     if (nameExists) {
-      ctShowNotification('同じ名前のグループが既に存在します。別の名前を選択してください。');
+      ctShowNotification(
+        "同じ名前のグループが既に存在します。別の名前を選択してください。"
+      );
       return;
     }
 
@@ -648,16 +683,20 @@ async function ctCreateCalendarGroup(): Promise<void> {
       name: groupName,
       calendars: selectedCalendars,
       createdAt: Date.now(),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     };
 
     await ctAddGroup(newGroup);
-    ctShowNotification(`グループ "${groupName}" を作成しました。\n含まれるカレンダー: ${selectedCalendars.join(', ')}`);
-    
-    console.log('新しいグループを作成しました:', newGroup);
+    ctShowNotification(
+      `グループ "${groupName}" を作成しました。\n含まれるカレンダー: ${selectedCalendars.join(
+        ", "
+      )}`
+    );
+
+    console.log("新しいグループを作成しました:", newGroup);
   } catch (error) {
-    console.error('グループ作成中にエラーが発生しました:', error);
-    ctShowNotification('グループの作成に失敗しました。');
+    console.error("グループ作成中にエラーが発生しました:", error);
+    ctShowNotification("グループの作成に失敗しました。");
   }
 }
 
@@ -677,42 +716,48 @@ async function ctHandleMessage(
 ): Promise<void> {
   try {
     switch (message.action) {
-      case 'applyGroup':
+      case "applyGroup":
         // グループを適用
-        await ctApplyCalendarGroup(message.group, message.settings.disableOthers);
+        await ctApplyCalendarGroup(
+          message.group,
+          message.settings.disableOthers
+        );
         sendResponse({ success: true });
         break;
 
-      case 'createGroup':
+      case "createGroup":
         // グループを作成
         await ctCreateCalendarGroup();
         sendResponse({ success: true });
         break;
 
-      case 'getCurrentCalendars':
+      case "getCurrentCalendars":
         // 現在選択中のカレンダーを取得
         const calendars = await ctGetCurrentlySelectedCalendars();
         sendResponse({ success: true, calendars });
         break;
 
-      case 'getCalendarList':
+      case "getCalendarList":
         // 全カレンダーの一覧を取得
         const allCalendars = await ctGetCalendarCheckboxes();
-        sendResponse({ 
-          success: true, 
-          calendars: allCalendars.map(c => ({ label: c.label, checked: c.checked }))
+        sendResponse({
+          success: true,
+          calendars: allCalendars.map((c) => ({
+            label: c.label,
+            checked: c.checked,
+          })),
         });
         break;
 
       default:
-        console.warn('不明なメッセージアクション:', message.action);
-        sendResponse({ success: false, error: 'Unknown action' });
+        console.warn("不明なメッセージアクション:", message.action);
+        sendResponse({ success: false, error: "Unknown action" });
     }
   } catch (error) {
-    console.error('メッセージ処理中にエラーが発生しました:', error);
-    sendResponse({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    console.error("メッセージ処理中にエラーが発生しました:", error);
+    sendResponse({
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }
@@ -725,14 +770,14 @@ async function ctHandleMessage(
  * @returns {Promise<void>}
  */
 async function ctInitialize(): Promise<void> {
-  console.log('Google カレンダーグループ拡張機能が初期化されました');
-  
+  console.log("Google カレンダーグループ拡張機能が初期化されました");
+
   try {
     // カレンダーの読み込み完了を待機
     await ctWaitForCalendarLoad();
-    console.log('カレンダーの読み込みが完了しました');
+    console.log("カレンダーの読み込みが完了しました");
   } catch (error) {
-    console.error('カレンダーの初期化に失敗しました:', error);
+    console.error("カレンダーの初期化に失敗しました:", error);
   }
 
   // メッセージリスナーを設定
@@ -743,8 +788,8 @@ async function ctInitialize(): Promise<void> {
 }
 
 // DOM読み込み完了後に初期化を実行
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', ctInitialize);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", ctInitialize);
 } else {
   ctInitialize();
 }

@@ -3,7 +3,14 @@
  * カレンダーグループの管理とコンテキストメニューの制御を行います
  */
 
-import { CalendarGroup, Settings, STORAGE_KEYS, MENU_IDS, DEFAULT_SETTINGS, generateId } from './shared';
+import {
+  CalendarGroup,
+  Settings,
+  STORAGE_KEYS,
+  MENU_IDS,
+  DEFAULT_SETTINGS,
+  generateId,
+} from "./shared";
 
 // ===== ストレージ関数 =====
 
@@ -15,10 +22,10 @@ import { CalendarGroup, Settings, STORAGE_KEYS, MENU_IDS, DEFAULT_SETTINGS, gene
 async function saveGroups(groups: CalendarGroup[]): Promise<void> {
   try {
     await chrome.storage.local.set({
-      [STORAGE_KEYS.GROUPS]: groups
+      [STORAGE_KEYS.GROUPS]: groups,
     });
   } catch (error) {
-    console.error('Failed to save groups:', error);
+    console.error("Failed to save groups:", error);
     throw error;
   }
 }
@@ -32,7 +39,7 @@ async function loadGroups(): Promise<CalendarGroup[]> {
     const result = await chrome.storage.local.get(STORAGE_KEYS.GROUPS);
     return result[STORAGE_KEYS.GROUPS] || [];
   } catch (error) {
-    console.error('Failed to load groups:', error);
+    console.error("Failed to load groups:", error);
     return [];
   }
 }
@@ -45,10 +52,10 @@ async function loadGroups(): Promise<CalendarGroup[]> {
 async function saveSettings(settings: Settings): Promise<void> {
   try {
     await chrome.storage.local.set({
-      [STORAGE_KEYS.SETTINGS]: settings
+      [STORAGE_KEYS.SETTINGS]: settings,
     });
   } catch (error) {
-    console.error('Failed to save settings:', error);
+    console.error("Failed to save settings:", error);
     throw error;
   }
 }
@@ -62,7 +69,7 @@ async function loadSettings(): Promise<Settings> {
     const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
     return { ...DEFAULT_SETTINGS, ...result[STORAGE_KEYS.SETTINGS] };
   } catch (error) {
-    console.error('Failed to load settings:', error);
+    console.error("Failed to load settings:", error);
     return DEFAULT_SETTINGS;
   }
 }
@@ -78,7 +85,6 @@ async function addGroup(group: CalendarGroup): Promise<void> {
   await saveGroups(groups);
 }
 
-
 // ===== コンテキストメニュー管理 =====
 
 /**
@@ -90,33 +96,33 @@ async function updateContextMenus(): Promise<void> {
   // 既存のメニューをすべて削除
   chrome.contextMenus.removeAll(async () => {
     const groups = await loadGroups();
-    
+
     // グループが存在する場合は各グループのメニューを作成
     if (groups.length > 0) {
-      groups.forEach(group => {
+      groups.forEach((group) => {
         chrome.contextMenus.create({
           id: MENU_IDS.PREFIX + group.id,
           title: `グループ: ${group.name}`,
-          contexts: ['page'],
-          documentUrlPatterns: ['https://calendar.google.com/*']
+          contexts: ["page"],
+          documentUrlPatterns: ["https://calendar.google.com/*"],
         });
       });
 
       // セパレーターを追加
       chrome.contextMenus.create({
         id: MENU_IDS.SEPARATOR,
-        type: 'separator',
-        contexts: ['page'],
-        documentUrlPatterns: ['https://calendar.google.com/*']
+        type: "separator",
+        contexts: ["page"],
+        documentUrlPatterns: ["https://calendar.google.com/*"],
       });
     }
 
     // 「グループを作成」メニューを追加
     chrome.contextMenus.create({
       id: MENU_IDS.CREATE,
-      title: 'グループを作成',
-      contexts: ['page'],
-      documentUrlPatterns: ['https://calendar.google.com/*']
+      title: "グループを作成",
+      contexts: ["page"],
+      documentUrlPatterns: ["https://calendar.google.com/*"],
     });
   });
 }
@@ -131,14 +137,14 @@ async function updateContextMenus(): Promise<void> {
 async function sendCreateGroupMessage(tabId: number): Promise<void> {
   try {
     const response = await chrome.tabs.sendMessage(tabId, {
-      action: 'createGroup'
+      action: "createGroup",
     });
-    
+
     if (response && response.success) {
-      console.log('Group creation initiated successfully');
+      console.log("Group creation initiated successfully");
     }
   } catch (error) {
-    console.error('Failed to initiate group creation:', error);
+    console.error("Failed to initiate group creation:", error);
   }
 }
 
@@ -148,29 +154,32 @@ async function sendCreateGroupMessage(tabId: number): Promise<void> {
  * @param {string} groupId - 適用するグループのID
  * @returns {Promise<void>}
  */
-async function sendApplyGroupMessage(tabId: number, groupId: string): Promise<void> {
+async function sendApplyGroupMessage(
+  tabId: number,
+  groupId: string
+): Promise<void> {
   try {
     const groups = await loadGroups();
-    const selectedGroup = groups.find(g => g.id === groupId);
-    
+    const selectedGroup = groups.find((g) => g.id === groupId);
+
     if (!selectedGroup) {
-      console.error('Group not found:', groupId);
+      console.error("Group not found:", groupId);
       return;
     }
 
     const settings = await loadSettings();
-    
+
     const response = await chrome.tabs.sendMessage(tabId, {
-      action: 'applyGroup',
+      action: "applyGroup",
       group: selectedGroup,
-      settings: settings
+      settings: settings,
     });
-    
+
     if (response && response.success) {
-      console.log('Group applied successfully:', selectedGroup.name);
+      console.log("Group applied successfully:", selectedGroup.name);
     }
   } catch (error) {
-    console.error('Failed to apply group:', error);
+    console.error("Failed to apply group:", error);
   }
 }
 
@@ -196,11 +205,11 @@ async function handleContextMenuClick(
       await sendCreateGroupMessage(tab.id);
     } else if (menuItemId.startsWith(MENU_IDS.PREFIX)) {
       // 既存グループメニューがクリックされた場合
-      const groupId = menuItemId.replace(MENU_IDS.PREFIX, '');
+      const groupId = menuItemId.replace(MENU_IDS.PREFIX, "");
       await sendApplyGroupMessage(tab.id, groupId);
     }
   } catch (error) {
-    console.error('Error handling context menu click:', error);
+    console.error("Error handling context menu click:", error);
   }
 }
 
@@ -215,8 +224,8 @@ async function handleStorageChange(
   changes: { [key: string]: chrome.storage.StorageChange },
   namespace: string
 ): Promise<void> {
-  if (namespace === 'local' && changes[STORAGE_KEYS.GROUPS]) {
-    console.log('Groups changed, updating context menus');
+  if (namespace === "local" && changes[STORAGE_KEYS.GROUPS]) {
+    console.log("Groups changed, updating context menus");
     await updateContextMenus();
   }
 }
@@ -229,16 +238,16 @@ async function handleStorageChange(
  * @returns {Promise<void>}
  */
 async function initializeBackground(): Promise<void> {
-  console.log('Initializing background script...');
-  
+  console.log("Initializing background script...");
+
   // イベントリスナーを設定
   chrome.contextMenus.onClicked.addListener(handleContextMenuClick);
   chrome.storage.onChanged.addListener(handleStorageChange);
-  
+
   // コンテキストメニューを初期化
   await updateContextMenus();
-  
-  console.log('Background script initialized successfully');
+
+  console.log("Background script initialized successfully");
 }
 
 // バックグラウンドスクリプトを初期化

@@ -26,18 +26,18 @@ export interface Settings {
 // ===== 定数 =====
 
 export const STORAGE_KEYS = {
-  GROUPS: 'calendarGroups',
-  SETTINGS: 'settings'
+  GROUPS: "calendarGroups",
+  SETTINGS: "settings",
 } as const;
 
 export const DEFAULT_SETTINGS: Settings = {
-  disableOthers: true
+  disableOthers: true,
 };
 
 export const MENU_IDS = {
-  PREFIX: 'calendar-group-',
-  CREATE: 'create-group',
-  SEPARATOR: 'separator'
+  PREFIX: "calendar-group-",
+  CREATE: "create-group",
+  SEPARATOR: "separator",
 } as const;
 
 // ===== ユーティリティ関数 =====
@@ -48,7 +48,7 @@ export const MENU_IDS = {
  * @returns {Promise<void>}
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -56,5 +56,5 @@ export function sleep(ms: number): Promise<void> {
  * @returns {string} 生成されたID
  */
 export function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return crypto.randomUUID();
 }

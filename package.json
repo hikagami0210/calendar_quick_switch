@@ -8,7 +8,9 @@
     "watch": "tsc --watch",
     "clean": "rm -rf dist",
     "lint": "eslint src/**/*.ts",
-    "dev": "npm run clean && npm run build && npm run watch"
+    "dev": "npm run clean && npm run build && npm run watch",
+    "package": "npm run build && npm run create-package",
+    "create-package": "mkdir -p release && zip -r release/google-calendar-group-extension-v$(node -p \"require('./package.json').version\").zip manifest.json dist/ icons/ popup.html popup.js settings.html settings.js -x '*.map' '*.d.ts'"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.254",

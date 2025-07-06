@@ -21,19 +21,13 @@
     "noUnusedParameters": true
   },
   "include": [
-    "src/background-final.ts",
-    "src/content-final.ts"
+    "src/background.ts",
+    "src/content.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.spec.ts",
-    "src/background.ts",
-    "src/content.ts",
-    "src/storage.ts",
-    "src/types.ts",
-    "src/calendar-manager.ts",
-    "src/group-creator.ts"
+    "**/*.spec.ts"
   ]
 }

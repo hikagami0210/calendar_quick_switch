@@ -21,8 +21,8 @@
     "noUnusedParameters": true
   },
   "include": [
-    "src/background-standalone.ts",
-    "src/content-standalone.ts"
+    "src/background-final.ts",
+    "src/content-final.ts"
   ],
   "exclude": [
     "node_modules",

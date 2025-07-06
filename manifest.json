@@ -6,12 +6,12 @@
   "permissions": ["contextMenus", "storage", "activeTab"],
   "host_permissions": ["https://calendar.google.com/*"],
   "background": {
-    "service_worker": "dist/background-standalone.js"
+    "service_worker": "dist/background-final.js"
   },
   "content_scripts": [
     {
       "matches": ["https://calendar.google.com/*"],
-      "js": ["dist/content-standalone.js"],
+      "js": ["dist/content-final.js"],
       "run_at": "document_end"
     }
   ],

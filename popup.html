@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <style>
       body {
-        width: 300px;
+        width: 320px;
         padding: 16px;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
@@ -21,13 +21,49 @@
         margin: 0;
       }
 
-      .info {
+      .section {
+        margin-bottom: 16px;
+      }
+
+      .usage-info {
         background: #f5f5f5;
         padding: 12px;
         border-radius: 4px;
         text-align: center;
         color: #666;
         font-size: 14px;
+        margin-bottom: 16px;
+      }
+
+      .button {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: #1976d2;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        box-sizing: border-box;
+        margin-bottom: 8px;
+      }
+
+      .button:hover {
+        background: #1565c0;
+      }
+
+      .button.secondary {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+      }
+
+      .button.secondary:hover {
+        background: #e0e0e0;
       }
 
       .link {
@@ -39,6 +75,51 @@
       .link:hover {
         text-decoration: underline;
       }
+
+      .status {
+        font-size: 12px;
+        color: #888;
+        text-align: center;
+        margin-top: 12px;
+      }
+
+      .groups-preview {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px;
+        margin-bottom: 8px;
+        max-height: 120px;
+        overflow-y: auto;
+      }
+
+      .group-item {
+        padding: 4px 8px;
+        font-size: 13px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .group-item:last-child {
+        border-bottom: none;
+      }
+
+      .group-name {
+        font-weight: 500;
+        color: #333;
+      }
+
+      .group-calendars {
+        color: #666;
+        font-size: 11px;
+        margin-top: 2px;
+      }
+
+      .no-groups {
+        text-align: center;
+        color: #999;
+        font-size: 13px;
+        padding: 16px;
+      }
     </style>
   </head>
   <body>
@@ -46,15 +127,31 @@
       <h1>Google カレンダーグループ</h1>
     </div>
 
-    <div class="info">
-      <p>
-        Google Calendarページで右クリックしてグループを作成・切り替えできます。
-      </p>
-      <p>
-        <a href="https://calendar.google.com" class="link" target="_blank"
-          >Google Calendar</a
-        >を開いてご利用ください。
-      </p>
+    <div class="section">
+      <div class="usage-info">
+        <p>
+          Google Calendarページで右クリックしてグループを作成・切り替えできます。
+        </p>
+      </div>
     </div>
+
+    <div class="section">
+      <div class="groups-preview" id="groupsPreview">
+        <div class="no-groups">保存されたグループがありません</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <button class="button" id="openSettings">設定とグループ管理</button>
+      <a href="https://calendar.google.com" class="button secondary" target="_blank">
+        Google Calendar を開く
+      </a>
+    </div>
+
+    <div class="status" id="status">
+      読み込み中...
+    </div>
+
+    <script src="popup.js"></script>
   </body>
 </html>

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Google カレンダーグループ - 設定</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: #1976d2;
+        color: white;
+        padding: 24px;
+        text-align: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 500;
+      }
+
+      .header p {
+        margin: 8px 0 0 0;
+        opacity: 0.9;
+        font-size: 14px;
+      }
+
+      .content {
+        padding: 32px;
+      }
+
+      .section {
+        margin-bottom: 40px;
+        padding-bottom: 32px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1976d2;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+      }
+
+      .section-title::before {
+        content: "";
+        display: inline-block;
+        width: 4px;
+        height: 24px;
+        background: #1976d2;
+        margin-right: 12px;
+        border-radius: 2px;
+      }
+
+      .section-description {
+        color: #666;
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+
+      /* グループ管理セクション */
+      .groups-container {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .groups-header {
+        background: #f8f9fa;
+        padding: 16px 20px;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .groups-count {
+        font-weight: 500;
+        color: #333;
+      }
+
+      .add-group-btn {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: 500;
+      }
+
+      .add-group-btn:hover {
+        background: #45a049;
+      }
+
+      .groups-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .group-item {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+
+      .group-item:last-child {
+        border-bottom: none;
+      }
+
+      .group-item:hover {
+        background: #f8f9fa;
+      }
+
+      .group-info {
+        flex: 1;
+        margin-right: 16px;
+      }
+
+      .group-name {
+        font-weight: 500;
+        font-size: 16px;
+        color: #333;
+        margin-bottom: 4px;
+        word-break: break-word;
+      }
+
+      .group-calendars {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .group-meta {
+        color: #999;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+
+      .group-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      .btn {
+        padding: 6px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .btn:hover {
+        background: #f5f5f5;
+      }
+
+      .btn.edit {
+        color: #1976d2;
+        border-color: #1976d2;
+      }
+
+      .btn.edit:hover {
+        background: #e3f2fd;
+      }
+
+      .btn.delete {
+        color: #d32f2f;
+        border-color: #d32f2f;
+      }
+
+      .btn.delete:hover {
+        background: #ffebee;
+      }
+
+      .no-groups {
+        padding: 40px 20px;
+        text-align: center;
+        color: #999;
+      }
+
+      .no-groups p {
+        margin: 0 0 16px 0;
+        font-size: 16px;
+      }
+
+      .no-groups .suggestion {
+        font-size: 14px;
+        color: #666;
+      }
+
+      /* インポート/エクスポートセクション */
+      .import-export-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+
+      .import-export-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        background: #fafafa;
+      }
+
+      .card-title {
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 12px;
+        color: #333;
+      }
+
+      .card-description {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 16px;
+        line-height: 1.4;
+      }
+
+      .primary-btn {
+        background: #1976d2;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+      }
+
+      .primary-btn:hover {
+        background: #1565c0;
+      }
+
+      .primary-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .file-input {
+        display: none;
+      }
+
+      /* 設定セクション */
+      .settings-container {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 24px;
+        background: #fafafa;
+      }
+
+      .setting-item {
+        margin-bottom: 24px;
+      }
+
+      .setting-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .setting-label {
+        font-weight: 500;
+        font-size: 16px;
+        margin-bottom: 8px;
+        color: #333;
+      }
+
+      .setting-description {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 12px;
+        line-height: 1.4;
+      }
+
+      .radio-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .radio-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .radio-option:hover {
+        background: #f8f9fa;
+        border-color: #1976d2;
+      }
+
+      .radio-option.selected {
+        background: #e3f2fd;
+        border-color: #1976d2;
+      }
+
+      .radio-option input[type="radio"] {
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .radio-content {
+        flex: 1;
+      }
+
+      .radio-title {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .radio-desc {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.3;
+      }
+
+      /* モーダル */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal.show {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        color: #333;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .close-btn:hover {
+        color: #666;
+      }
+
+      .modal-body {
+        padding: 24px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #333;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #1976d2;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+      }
+
+      .calendars-editor {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px;
+        background: #fafafa;
+        margin-bottom: 12px;
+      }
+
+      .calendar-item {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        color: #666;
+      }
+
+      .calendar-item:last-child {
+        border-bottom: none;
+      }
+
+      .calendar-edit-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .calendar-edit-item:last-child {
+        border-bottom: none;
+      }
+
+      .calendar-input {
+        flex: 1;
+        padding: 6px 8px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-size: 13px;
+        font-family: inherit;
+      }
+
+      .calendar-input:focus {
+        outline: none;
+        border-color: #1976d2;
+        box-shadow: 0 0 0 1px rgba(25, 118, 210, 0.2);
+      }
+
+      .calendar-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+      }
+
+      .calendar-btn {
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 3px;
+        font-size: 11px;
+        cursor: pointer;
+        font-weight: 500;
+        min-width: 40px;
+      }
+
+      .calendar-btn:hover {
+        background: #f5f5f5;
+      }
+
+      .calendar-btn.save {
+        color: #4caf50;
+        border-color: #4caf50;
+      }
+
+      .calendar-btn.save:hover {
+        background: #e8f5e8;
+      }
+
+      .calendar-btn.cancel {
+        color: #666;
+        border-color: #ccc;
+      }
+
+      .calendar-btn.cancel:hover {
+        background: #f0f0f0;
+      }
+
+      .calendar-btn.edit {
+        color: #1976d2;
+        border-color: #1976d2;
+      }
+
+      .calendar-btn.edit:hover {
+        background: #e3f2fd;
+      }
+
+      .calendar-btn.delete {
+        color: #d32f2f;
+        border-color: #d32f2f;
+      }
+
+      .calendar-btn.delete:hover {
+        background: #ffebee;
+      }
+
+      .add-calendar-section {
+        border-top: 1px solid #eee;
+        padding-top: 12px;
+      }
+
+      .add-calendar-input-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .add-calendar-btn {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .add-calendar-btn:hover {
+        background: #45a049;
+      }
+
+      .add-calendar-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .calendar-display-name {
+        flex: 1;
+        padding: 6px 8px;
+        color: #333;
+        font-size: 13px;
+      }
+
+      .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .secondary-btn {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+
+      .secondary-btn:hover {
+        background: #e0e0e0;
+      }
+
+      .error-message {
+        color: #d32f2f;
+        font-size: 13px;
+        margin-top: 8px;
+      }
+
+      /* レスポンシブ */
+      @media (max-width: 768px) {
+        body {
+          padding: 12px;
+        }
+
+        .content {
+          padding: 20px;
+        }
+
+        .import-export-container {
+          grid-template-columns: 1fr;
+        }
+
+        .group-item {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .group-actions {
+          margin-top: 12px;
+          justify-content: flex-end;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Google カレンダーグループ - 設定</h1>
+        <p>カレンダーグループの管理と拡張機能の設定を行います</p>
+      </div>
+
+      <div class="content">
+        <!-- グループ管理セクション -->
+        <div class="section">
+          <h2 class="section-title">保存済みグループの管理</h2>
+          <p class="section-description">
+            作成したカレンダーグループの確認、編集、削除を行えます。グループ名やカレンダーの組み合わせを変更できます。
+          </p>
+
+          <div class="groups-container">
+            <div class="groups-header">
+              <span class="groups-count" id="groupsCount">グループを読み込み中...</span>
+              <button class="add-group-btn" id="addGroupBtn">新しいグループを追加</button>
+            </div>
+            <div class="groups-list" id="groupsList">
+              <div class="no-groups">
+                <p>保存されたグループがありません</p>
+                <p class="suggestion">Google Calendarページで右クリックしてグループを作成してください</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- インポート/エクスポートセクション -->
+        <div class="section">
+          <h2 class="section-title">データのバックアップと復元</h2>
+          <p class="section-description">
+            グループデータをファイルに保存したり、バックアップから復元したりできます。
+          </p>
+
+          <div class="import-export-container">
+            <div class="import-export-card">
+              <h3 class="card-title">エクスポート</h3>
+              <p class="card-description">
+                すべてのグループをJSONファイルとして保存します。
+              </p>
+              <button class="primary-btn" id="exportBtn">グループをエクスポート</button>
+            </div>
+
+            <div class="import-export-card">
+              <h3 class="card-title">インポート</h3>
+              <p class="card-description">
+                JSONファイルからグループを復元します。
+              </p>
+              <input type="file" id="importFile" class="file-input" accept=".json" />
+              <button class="primary-btn" id="importBtn">ファイルを選択してインポート</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 動作設定セクション -->
+        <div class="section">
+          <h2 class="section-title">動作設定</h2>
+          <p class="section-description">
+            グループを適用する際の動作を設定できます。
+          </p>
+
+          <div class="settings-container">
+            <div class="setting-item">
+              <div class="setting-label">グループ適用時の動作</div>
+              <div class="setting-description">
+                グループに属さないカレンダーをどのように扱うかを選択してください。
+              </div>
+
+              <div class="radio-group">
+                <label class="radio-option" id="disableOthersOption">
+                  <input type="radio" name="disableOthers" value="true" />
+                  <div class="radio-content">
+                    <div class="radio-title">グループ外のカレンダーを無効にする（推奨）</div>
+                    <div class="radio-desc">
+                      グループに属するカレンダーのみを表示し、それ以外のカレンダーは自動的に非表示にします。
+                    </div>
+                  </div>
+                </label>
+
+                <label class="radio-option" id="keepOthersOption">
+                  <input type="radio" name="disableOthers" value="false" />
+                  <div class="radio-content">
+                    <div class="radio-title">グループ外のカレンダーの状態を維持する</div>
+                    <div class="radio-desc">
+                      グループに属するカレンダーを表示しますが、それ以外のカレンダーの表示状態は変更しません。
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- グループ編集モーダル -->
+    <div class="modal" id="editModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="modalTitle">グループを編集</h3>
+          <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <div class="form-group">
+              <label class="form-label" for="groupName">グループ名</label>
+              <input type="text" id="groupName" class="form-input" placeholder="グループ名を入力" maxlength="50" required />
+              <div class="error-message" id="nameError"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">カレンダー</label>
+              <div class="calendars-editor" id="calendarsEditor">
+                <div class="calendar-item">カレンダー情報を読み込み中...</div>
+              </div>
+              <div class="add-calendar-section">
+                <div class="add-calendar-input-group">
+                  <input type="text" id="newCalendarName" class="form-input" placeholder="新しいカレンダー名を入力" />
+                  <button type="button" class="add-calendar-btn" id="addCalendarBtn">追加</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="secondary-btn" id="cancelBtn">キャンセル</button>
+          <button type="button" class="primary-btn" id="saveBtn">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="settings.js"></script>
+  </body>
+</html>

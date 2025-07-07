@@ -287,88 +287,6 @@ function ctToggleCheckbox(checkbox: HTMLInputElement, checked: boolean): void {
   }
 }
 
-/**
- * DOM構造を詳細に調査するデバッグ関数
- * @returns {void}
- */
-function ctAnalyzeDOMStructure(): void {
-  console.log("=== DOM構造調査開始 ===");
-
-  // 1. すべてのチェックボックスを探す
-  const allCheckboxes = Array.from(
-    document.querySelectorAll('input[type="checkbox"]')
-  );
-  console.log(`総チェックボックス数: ${allCheckboxes.length}`);
-
-  // 2. スクロール可能な要素を探す
-  const scrollableElements = Array.from(document.querySelectorAll("*")).filter(
-    (el) => {
-      const style = window.getComputedStyle(el);
-      return (
-        style.overflow === "auto" ||
-        style.overflow === "scroll" ||
-        style.overflowY === "auto" ||
-        style.overflowY === "scroll"
-      );
-    }
-  );
-  console.log(`スクロール可能な要素数: ${scrollableElements.length}`);
-  scrollableElements.forEach((el, index) => {
-    console.log(`スクロール要素${index}:`, el.tagName, el.className, el.id);
-  });
-
-  // 3. サイドバー関連要素を探す
-  const sidebarSelectors = [
-    '[data-testid="sidebar"]',
-    '[role="complementary"]',
-    '[role="navigation"]',
-    "nav",
-    ".sidebar",
-    "#sidebar",
-  ];
-
-  sidebarSelectors.forEach((selector) => {
-    const elements = document.querySelectorAll(selector);
-    if (elements.length > 0) {
-      console.log(`${selector} が ${elements.length} 個見つかりました`);
-    }
-  });
-
-  // 4. ドロワーヘッダーとスクロールコンテナを探す
-  const drawerHeaders = Array.from(document.querySelectorAll("h1")).filter(
-    (h1) =>
-      h1.textContent?.includes("ドロワー") || h1.textContent?.includes("Drawer")
-  );
-
-  console.log(`ドロワーヘッダー数: ${drawerHeaders.length}`);
-  drawerHeaders.forEach((header, index) => {
-    console.log(`ドロワーヘッダー${index}:`, header.textContent);
-    const parent = header.parentElement;
-    if (parent) {
-      console.log(
-        `  親要素: ${parent.tagName}.${parent.className} #${parent.id}`
-      );
-      const style = window.getComputedStyle(parent);
-      console.log(`  スクロール可能: ${style.overflow}, ${style.overflowY}`);
-    }
-  });
-
-  // 5. カレンダーチェックボックスの親要素構造を調査
-  allCheckboxes.slice(0, 3).forEach((checkbox, index) => {
-    console.log(`チェックボックス${index}の親要素構造:`);
-    let parent = checkbox.parentElement;
-    let level = 0;
-    while (parent && level < 5) {
-      console.log(
-        `  レベル${level}: ${parent.tagName}.${parent.className} #${parent.id}`
-      );
-      parent = parent.parentElement;
-      level++;
-    }
-  });
-
-  console.log("=== DOM構造調査終了 ===");
-}
 
 /**
  * ドロワーのスクロールコンテナを見つける
@@ -397,85 +315,9 @@ function ctFindDrawerScrollContainer(): HTMLElement | null {
   return null;
 }
 
-/**
- * ドロワー専用スクロール関数
- * @param {HTMLElement} element - スクロール対象の要素
- * @returns {Promise<void>}
- */
-async function ctScrollToElementInDrawer(element: HTMLElement): Promise<void> {
-  console.log("=== ドロワースクロール開始 ===");
-  console.log("対象要素:", element);
-
-  // 1. 要素の現在位置を確認
-  const rect = element.getBoundingClientRect();
-  console.log("要素位置:", {
-    top: rect.top,
-    bottom: rect.bottom,
-    visible: rect.top >= 0 && rect.bottom <= window.innerHeight,
-  });
-
-  if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
-    console.log("✅ 要素は既に表示されています");
-    return;
-  }
-
-  // 2. ドロワーのスクロールコンテナを探す
-  const drawerContainer = ctFindDrawerScrollContainer();
-
-  if (drawerContainer) {
-    console.log("🎯 ドロワーコンテナでスクロール実行");
-
-    // ドロワーコンテナ内での要素の位置を計算
-    const containerRect = drawerContainer.getBoundingClientRect();
-    const elementRect = element.getBoundingClientRect();
-
-    // スクロール量を計算（要素を中央に表示）
-    const scrollTop =
-      drawerContainer.scrollTop +
-      (elementRect.top - containerRect.top) -
-      containerRect.height / 2;
-
-    console.log(`スクロール実行: ${scrollTop}px`);
-
-    drawerContainer.scrollTo({
-      top: scrollTop,
-      behavior: "smooth",
-    });
-
-    await ctSleep(1000);
-
-    // 結果確認
-    const newRect = element.getBoundingClientRect();
-    console.log("スクロール後の要素位置:", {
-      top: newRect.top,
-      bottom: newRect.bottom,
-      visible: newRect.top >= 0 && newRect.bottom <= window.innerHeight,
-    });
-
-    if (newRect.top >= 0 && newRect.bottom <= window.innerHeight) {
-      console.log("✅ ドロワースクロール成功");
-      return;
-    }
-  }
-
-  // 3. フォールバック: 通常のscrollIntoView
-  console.log("⚠️ フォールバック: scrollIntoView使用");
-  element.scrollIntoView({ behavior: "smooth", block: "center" });
-  await ctSleep(1000);
-
-  // 最終結果確認
-  const finalRect = element.getBoundingClientRect();
-  console.log("最終的な要素位置:", {
-    top: finalRect.top,
-    bottom: finalRect.bottom,
-    visible: finalRect.top >= 0 && finalRect.bottom <= window.innerHeight,
-  });
-
-  console.log("=== ドロワースクロール終了 ===");
-}
 
 /**
- * 指定されたラベルのチェックボックスを検索します（シンプル版）
+ * 指定されたラベルのチェックボックスを検索します
  * @param {string} label - 検索するカレンダーのラベル
  * @returns {HTMLInputElement | null} 見つかったチェックボックス要素、またはnull
  */
@@ -485,7 +327,6 @@ function ctFindCheckboxByLabel(label: string): HTMLInputElement | null {
   ) as HTMLInputElement[];
 
   const normalizedTargetLabel = label.trim();
-  console.log(`🔍 検索開始: "${normalizedTargetLabel}"`);
 
   for (const checkbox of allCheckboxes) {
     const checkboxLabel = ctGetCalendarLabel(checkbox);
@@ -493,107 +334,77 @@ function ctFindCheckboxByLabel(label: string): HTMLInputElement | null {
       const normalizedCheckboxLabel = checkboxLabel.trim();
 
       if (normalizedCheckboxLabel === normalizedTargetLabel) {
-        console.log(`✅ 発見: "${normalizedCheckboxLabel}"`);
         return checkbox;
       }
     }
   }
 
-  console.log(`❌ 未発見: "${normalizedTargetLabel}"`);
   return null;
 }
 
 /**
- * 仮想スクロールでカレンダーを探してスクロールで表示する（新実装）
+ * 仮想スクロールでカレンダーを探してスクロールで表示する
  * @param {string} label - 検索するカレンダーのラベル
  * @returns {Promise<HTMLInputElement | null>} 見つかったチェックボックス要素、またはnull
  */
 async function ctFindAndScrollToCheckbox(
   label: string
 ): Promise<HTMLInputElement | null> {
-  console.log(`🎯 カレンダー検索開始: "${label}"`);
-
   // 1. まず現在表示されている範囲で検索
   let checkbox = ctFindCheckboxByLabel(label);
   if (checkbox) {
-    console.log("✅ 既に表示範囲内にあります");
     return checkbox;
   }
 
   // 2. ドロワーコンテナを取得
   const drawerContainer = ctFindDrawerScrollContainer();
   if (!drawerContainer) {
-    console.log("❌ ドロワーコンテナが見つかりません");
+    console.warn(`カレンダー "${label}" の検索に失敗: ドロワーコンテナが見つかりません`);
     return null;
   }
 
-  console.log("🔄 仮想スクロール開始 - 段階的にスクロールして要素を探します");
-
   // 3. 段階的にスクロールして新しいDOM要素をレンダリングさせる
-  const maxScrollAttempts = 10; // 最大スクロール回数
-  const scrollStep = 200; // 各ステップでのスクロール量
+  const maxScrollAttempts = 10;
+  const scrollStep = 200;
   let currentScrollTop = drawerContainer.scrollTop;
 
+  // 下方向スクロール
   for (let attempt = 0; attempt < maxScrollAttempts; attempt++) {
-    console.log(`📜 スクロール試行 ${attempt + 1}/${maxScrollAttempts}`);
-
-    // スクロール実行
     currentScrollTop += scrollStep;
     drawerContainer.scrollTop = currentScrollTop;
-
-    console.log(`スクロール位置: ${currentScrollTop}px`);
-
-    // DOM要素のレンダリングを待機
     await ctSleep(300);
 
-    // 新しくレンダリングされた要素を検索
     checkbox = ctFindCheckboxByLabel(label);
     if (checkbox) {
-      console.log(`✅ スクロール試行 ${attempt + 1} で発見!`);
       return checkbox;
     }
 
-    // スクロール限界チェック
     if (
       drawerContainer.scrollTop >=
       drawerContainer.scrollHeight - drawerContainer.clientHeight
     ) {
-      console.log("📜 スクロール限界に到達");
       break;
     }
   }
 
-  // 4. 下方向で見つからない場合、上方向もチェック
-  console.log("🔄 上方向スクロール開始");
+  // 4. 上方向スクロール
   currentScrollTop = drawerContainer.scrollTop;
-
   for (let attempt = 0; attempt < maxScrollAttempts; attempt++) {
-    console.log(`📜 上方向スクロール試行 ${attempt + 1}/${maxScrollAttempts}`);
-
-    // 上方向にスクロール
     currentScrollTop = Math.max(0, currentScrollTop - scrollStep);
     drawerContainer.scrollTop = currentScrollTop;
-
-    console.log(`スクロール位置: ${currentScrollTop}px`);
-
-    // DOM要素のレンダリングを待機
     await ctSleep(300);
 
-    // 新しくレンダリングされた要素を検索
     checkbox = ctFindCheckboxByLabel(label);
     if (checkbox) {
-      console.log(`✅ 上方向スクロール試行 ${attempt + 1} で発見!`);
       return checkbox;
     }
 
-    // スクロール限界チェック
     if (currentScrollTop <= 0) {
-      console.log("📜 上方向スクロール限界に到達");
       break;
     }
   }
 
-  console.log(`❌ "${label}" は仮想スクロールでも見つかりませんでした`);
+  console.warn(`カレンダー "${label}" が見つかりませんでした`);
   return null;
 }
 
@@ -725,11 +536,9 @@ async function ctApplyCalendarGroup(
           // チェックボックスを有効にする
           if (!checkbox.checked) {
             ctToggleCheckbox(checkbox, true);
-            console.log(`✅ スクロール後有効化: "${calendarLabel}"`);
+            console.log(`カレンダー "${calendarLabel}" を有効にしました（スクロール後）`);
           }
           processedCalendars.add(calendarLabel);
-        } else {
-          console.warn(`⚠️ カレンダーが見つかりません: "${calendarLabel}"`);
         }
       } catch (error) {
         console.error(
@@ -1154,37 +963,6 @@ async function ctInitialize(): Promise<void> {
   });
 }
 
-// ===== デバッグ・テスト関数（グローバル公開） =====
-
-/**
- * ブラウザコンソールから呼び出し可能なテスト関数
- */
-(window as any).ctDebugAnalyze = ctAnalyzeDOMStructure;
-(window as any).ctDebugScrollTo = ctFindAndScrollToCheckbox;
-(window as any).ctDebugToggle = async (label: string) => {
-  const checkbox = await ctFindAndScrollToCheckbox(label);
-  if (checkbox) {
-    ctToggleCheckbox(checkbox, !checkbox.checked);
-    console.log(
-      `🔄 トグル完了: "${label}" -> ${checkbox.checked ? "ON" : "OFF"}`
-    );
-  }
-};
-(window as any).ctDebugDrawer = ctFindDrawerScrollContainer;
-(window as any).ctTestScroll = async (distance: number = 200) => {
-  const drawer = ctFindDrawerScrollContainer();
-  if (drawer) {
-    console.log(`📜 テストスクロール開始: ${distance}px`);
-    console.log(`現在のスクロール位置: ${drawer.scrollTop}px`);
-    drawer.scrollTop += distance;
-    await ctSleep(500);
-    console.log(`新しいスクロール位置: ${drawer.scrollTop}px`);
-    const newCheckboxCount = document.querySelectorAll(
-      'input[type="checkbox"]'
-    ).length;
-    console.log(`スクロール後のチェックボックス数: ${newCheckboxCount}`);
-  }
-};
 
 // DOM読み込み完了後に初期化を実行
 if (document.readyState === "loading") {

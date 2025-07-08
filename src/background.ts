@@ -27,6 +27,7 @@ const BG_STORAGE_KEYS = {
 const BG_MENU_IDS = {
   PREFIX: "calendar-group-",
   CREATE: "create-group",
+  UNCHECK_ALL: "uncheck-all",
   SEPARATOR: "separator",
   SETTINGS: "open-settings",
 } as const;
@@ -148,6 +149,14 @@ async function bgUpdateContextMenus(): Promise<void> {
       documentUrlPatterns: ["https://calendar.google.com/*"],
     });
 
+    // 「全てチェックを外す」メニューを追加
+    chrome.contextMenus.create({
+      id: BG_MENU_IDS.UNCHECK_ALL,
+      title: "全てチェックを外す",
+      contexts: ["page"],
+      documentUrlPatterns: ["https://calendar.google.com/*"],
+    });
+
     // 「設定」メニューを追加
     chrome.contextMenus.create({
       id: BG_MENU_IDS.SETTINGS,
@@ -194,6 +203,25 @@ async function bgSendCreateGroupMessage(tabId: number): Promise<void> {
     }
   } catch (error) {
     console.error("Failed to initiate group creation:", error);
+  }
+}
+
+/**
+ * コンテンツスクリプトに全てチェックを外すメッセージを送信します
+ * @param {number} tabId - 対象タブのID
+ * @returns {Promise<void>}
+ */
+async function bgSendUncheckAllMessage(tabId: number): Promise<void> {
+  try {
+    const response = await chrome.tabs.sendMessage(tabId, {
+      action: "uncheckAll",
+    });
+
+    if (response && response.success) {
+      console.log("Uncheck all initiated successfully");
+    }
+  } catch (error) {
+    console.error("Failed to initiate uncheck all:", error);
   }
 }
 
@@ -252,6 +280,9 @@ async function bgHandleContextMenuClick(
     if (menuItemId === BG_MENU_IDS.CREATE) {
       // グループ作成メニューがクリックされた場合
       await bgSendCreateGroupMessage(tab.id);
+    } else if (menuItemId === BG_MENU_IDS.UNCHECK_ALL) {
+      // 全てチェックを外すメニューがクリックされた場合
+      await bgSendUncheckAllMessage(tab.id);
     } else if (menuItemId === BG_MENU_IDS.SETTINGS) {
       // 設定メニューがクリックされた場合
       await bgOpenSettingsPage();

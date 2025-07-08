@@ -287,7 +287,6 @@ function ctToggleCheckbox(checkbox: HTMLInputElement, checked: boolean): void {
   }
 }
 
-
 /**
  * ドロワーのスクロールコンテナを見つける
  * @returns {HTMLElement | null} ドロワーのスクロールコンテナ
@@ -314,7 +313,6 @@ function ctFindDrawerScrollContainer(): HTMLElement | null {
   console.log("⚠️ ドロワーヘッダーが見つかりません。代替手段を使用します");
   return null;
 }
-
 
 /**
  * 指定されたラベルのチェックボックスを検索します
@@ -359,7 +357,9 @@ async function ctFindAndScrollToCheckbox(
   // 2. ドロワーコンテナを取得
   const drawerContainer = ctFindDrawerScrollContainer();
   if (!drawerContainer) {
-    console.warn(`カレンダー "${label}" の検索に失敗: ドロワーコンテナが見つかりません`);
+    console.warn(
+      `カレンダー "${label}" の検索に失敗: ドロワーコンテナが見つかりません`
+    );
     return null;
   }
 
@@ -536,7 +536,9 @@ async function ctApplyCalendarGroup(
           // チェックボックスを有効にする
           if (!checkbox.checked) {
             ctToggleCheckbox(checkbox, true);
-            console.log(`カレンダー "${calendarLabel}" を有効にしました（スクロール後）`);
+            console.log(
+              `カレンダー "${calendarLabel}" を有効にしました（スクロール後）`
+            );
           }
           processedCalendars.add(calendarLabel);
         }
@@ -574,6 +576,110 @@ async function ctGetCurrentlySelectedCalendars(): Promise<string[]> {
   return checkboxes
     .filter((checkbox) => checkbox.checked)
     .map((checkbox) => checkbox.label);
+}
+
+/**
+ * 全てのカレンダーのチェックを外します
+ * @returns {Promise<void>}
+ */
+async function ctUncheckAllCalendars(): Promise<void> {
+  console.log("全てのカレンダーのチェックを外します...");
+
+  try {
+    // 1. 現在表示されているチェックボックスを取得
+    const initialCheckboxes = await ctGetCalendarCheckboxes();
+
+    if (initialCheckboxes.length === 0) {
+      console.warn("チェックボックスが見つかりませんでした");
+      ctShowNotification("カレンダーが見つかりませんでした。");
+      return;
+    }
+
+    console.log(`処理対象: ${initialCheckboxes.length}個のチェックボックス`);
+
+    // 2. 表示されているチェックボックスを全て無効化
+    let uncheckedCount = 0;
+    for (const checkbox of initialCheckboxes) {
+      if (checkbox.checked) {
+        ctToggleCheckbox(checkbox.element, false);
+        uncheckedCount++;
+        console.log(`カレンダー "${checkbox.label}" のチェックを外しました`);
+      }
+    }
+
+    // 3. スクロールして隠れているチェックボックスも処理
+    const drawerContainer = ctFindDrawerScrollContainer();
+    if (drawerContainer) {
+      const maxScrollAttempts = 10;
+      const scrollStep = 200;
+      let currentScrollTop = 0;
+
+      console.log("スクロールして隠れているカレンダーを処理中...");
+
+      // 下方向スクロール
+      for (let attempt = 0; attempt < maxScrollAttempts; attempt++) {
+        currentScrollTop += scrollStep;
+        drawerContainer.scrollTop = currentScrollTop;
+        await ctSleep(300);
+
+        // 新しく表示されたチェックボックスを処理
+        const newCheckboxes = await ctGetCalendarCheckboxes();
+        for (const checkbox of newCheckboxes) {
+          if (checkbox.checked) {
+            ctToggleCheckbox(checkbox.element, false);
+            uncheckedCount++;
+            console.log(
+              `カレンダー "${checkbox.label}" のチェックを外しました（スクロール後）`
+            );
+          }
+        }
+
+        if (
+          drawerContainer.scrollTop >=
+          drawerContainer.scrollHeight - drawerContainer.clientHeight
+        ) {
+          break;
+        }
+      }
+
+      // 上方向スクロール
+      currentScrollTop = drawerContainer.scrollTop;
+      for (let attempt = 0; attempt < maxScrollAttempts; attempt++) {
+        currentScrollTop = Math.max(0, currentScrollTop - scrollStep);
+        drawerContainer.scrollTop = currentScrollTop;
+        await ctSleep(300);
+
+        // 新しく表示されたチェックボックスを処理
+        const newCheckboxes = await ctGetCalendarCheckboxes();
+        for (const checkbox of newCheckboxes) {
+          if (checkbox.checked) {
+            ctToggleCheckbox(checkbox.element, false);
+            uncheckedCount++;
+            console.log(
+              `カレンダー "${checkbox.label}" のチェックを外しました（スクロール後）`
+            );
+          }
+        }
+
+        if (currentScrollTop <= 0) {
+          break;
+        }
+      }
+
+      // 最初の位置に戻す
+      drawerContainer.scrollTop = 0;
+    }
+
+    console.log(
+      `処理完了: ${uncheckedCount}個のカレンダーのチェックを外しました`
+    );
+    ctShowNotification(
+      `全てのカレンダーのチェックを外しました。（${uncheckedCount}個処理）`
+    );
+  } catch (error) {
+    console.error("全てのチェックを外す処理中にエラーが発生しました:", error);
+    ctShowNotification("エラーが発生しました。");
+  }
 }
 
 // ===== UI関数 =====
@@ -907,6 +1013,12 @@ async function ctHandleMessage(
         sendResponse({ success: true });
         break;
 
+      case "uncheckAll":
+        // 全てのカレンダーのチェックを外す
+        await ctUncheckAllCalendars();
+        sendResponse({ success: true });
+        break;
+
       case "getCurrentCalendars":
         // 現在選択中のカレンダーを取得
         const calendars = await ctGetCurrentlySelectedCalendars();
@@ -962,7 +1074,6 @@ async function ctInitialize(): Promise<void> {
     return true; // 非同期レスポンスを送信することを示す
   });
 }
-
 
 // DOM読み込み完了後に初期化を実行
 if (document.readyState === "loading") {

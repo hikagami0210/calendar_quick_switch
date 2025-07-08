@@ -1,6 +1,6 @@
 {
   "name": "google-calendar-group-extension",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Google Calendarでカレンダーグループを素早く切り替えできる拡張機能",
   "main": "dist/background.js",
   "scripts": {

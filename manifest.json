@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google カレンダーグループ",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Google Calendarでカレンダーグループを素早く切り替えできる拡張機能",
   "permissions": ["contextMenus", "storage", "activeTab"],
   "host_permissions": ["https://calendar.google.com/*"],
